@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Snapmaker RFID Tag Writer</title>
+  <title>Snapmaker RFID Tag Writer (WebNFC)</title>
 
-  <!-- WebNFC explizit erlauben -->
+  <!-- NFC explizit erlauben -->
   <meta http-equiv="Permissions-Policy" content="nfc=(self)">
 
   <style>
@@ -28,13 +28,13 @@
       margin: auto;
     }
     label {
-      margin-top: 1rem;
       display: block;
+      margin-top: 1rem;
     }
     select, input, button {
       width: 100%;
       padding: 0.6rem;
-      margin-top: 0.5rem;
+      margin-top: 0.4rem;
       font-size: 1rem;
     }
     button {
@@ -45,16 +45,13 @@
       cursor: pointer;
       margin-top: 1rem;
     }
-    button:active {
-      background: #1d4ed8;
-    }
     pre {
       background: #020617;
       padding: 0.75rem;
-      font-size: 0.85rem;
-      overflow: auto;
       border-radius: 8px;
-      margin-top: 0.75rem;
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      overflow-x: auto;
     }
     .status {
       margin-top: 1rem;
@@ -86,27 +83,27 @@
 
 <script>
 /* ===========================
-   FILAMENTE (18 ROLLEN)
+   FILAMENTE (18 Rollen)
    =========================== */
 const filaments = [
-  { name: "Geeetech PLA Weiß", json: { protocol:"openspool",version:"1.0",brand:"Geeetech",type:"PLA",color_hex:"#FFFFFF",min_temp:185,max_temp:215,bed_min_temp:25,bed_max_temp:60 }},
-  { name: "PLA+ Weiß", json: { protocol:"openspool",version:"1.0",brand:"Generic",type:"PLA+",color_hex:"#FFFFFF",min_temp:190,max_temp:220,bed_min_temp:50,bed_max_temp:60 }},
-  { name: "PLA+ Schwarz", json: { protocol:"openspool",version:"1.0",brand:"Generic",type:"PLA+",color_hex:"#000000",min_temp:190,max_temp:220,bed_min_temp:50,bed_max_temp:60 }},
-  { name: "Ender PLA Weiß", json: { protocol:"openspool",version:"1.0",brand:"Creality",type:"PLA",color_hex:"#FFFFFF",min_temp:190,max_temp:230,bed_min_temp:50,bed_max_temp:50 }},
-  { name: "Geeetech PLA Rot", json: { protocol:"openspool",version:"1.0",brand:"Geeetech",type:"PLA",color_hex:"#FF0000",min_temp:185,max_temp:215,bed_min_temp:25,bed_max_temp:60 }},
-  { name: "3DKaige PLA+ Grün", json: { protocol:"openspool",version:"1.0",brand:"3DKaige",type:"PLA+",color_hex:"#00983A",min_temp:210,max_temp:230,bed_min_temp:45,bed_max_temp:60 }},
-  { name: "eSun PLA Basic Grau", json: { protocol:"openspool",version:"1.0",brand:"eSun",type:"PLA",color_hex:"#808080",min_temp:210,max_temp:230,bed_min_temp:45,bed_max_temp:60 }},
-  { name: "eSun PLA+ Hellbraun", json: { protocol:"openspool",version:"1.0",brand:"eSun",type:"PLA+",color_hex:"#A27557",min_temp:205,max_temp:225,bed_min_temp:60,bed_max_temp:80 }},
-  { name: "Timorry PETG Weiß", json: { protocol:"openspool",version:"1.0",brand:"Timorry",type:"PETG",color_hex:"#FFFFFF",min_temp:240,max_temp:270,bed_min_temp:65,bed_max_temp:75 }},
-  { name: "PETG Gelb A12089", json: { protocol:"openspool",version:"1.0",brand:"Generic",type:"PETG",color_hex:"#FFFF00",min_temp:230,max_temp:250,bed_min_temp:70,bed_max_temp:85 }},
-  { name: "Jlob PETG Schwarz", json: { protocol:"openspool",version:"1.0",brand:"Jlob",type:"PETG",color_hex:"#000000",min_temp:190,max_temp:230,bed_min_temp:70,bed_max_temp:85 }},
-  { name: "Amazon Basics PETG Blau", json: { protocol:"openspool",version:"1.0",brand:"Amazon Basics",type:"PETG",color_hex:"#0443BA",min_temp:230,max_temp:240,bed_min_temp:80,bed_max_temp:80 }},
-  { name: "Amazon Basics PETG Orange", json: { protocol:"openspool",version:"1.0",brand:"Amazon Basics",type:"PETG",color_hex:"#E97435",min_temp:230,max_temp:240,bed_min_temp:80,bed_max_temp:80 }},
-  { name: "Rankforce PP", json: { protocol:"openspool",version:"1.0",brand:"Rankforce",type:"PP",color_hex:"#FFFFFF",min_temp:230,max_temp:250,bed_min_temp:90,bed_max_temp:110 }},
-  { name: "Creality Hyper PC", json: { protocol:"openspool",version:"1.0",brand:"Creality",type:"PC",color_hex:"#CCCCCC",min_temp:240,max_temp:260,bed_min_temp:50,bed_max_temp:80 }},
-  { name: "TPU 58 Shore Blau", json: { protocol:"openspool",version:"1.0",brand:"Generic",type:"TPU",color_hex:"#004A9F",min_temp:230,max_temp:260,bed_min_temp:50,bed_max_temp:60 }},
-  { name: "TPU 58 Shore Transparent", json: { protocol:"openspool",version:"1.0",brand:"Generic",type:"TPU",color_hex:"#FFFFFF",min_temp:230,max_temp:260,bed_min_temp:50,bed_max_temp:60 }},
-  { name: "eSun PLA Basic Orange", json: { protocol:"openspool",version:"1.0",brand:"eSun",type:"PLA",color_hex:"#FF8C00",min_temp:210,max_temp:230,bed_min_temp:45,bed_max_temp:60 }}
+  { name:"Geeetech PLA Weiß", json:{protocol:"openspool",version:"1.0",brand:"Geeetech",type:"PLA",color_hex:"#FFFFFF",min_temp:185,max_temp:215,bed_min_temp:25,bed_max_temp:60}},
+  { name:"PLA+ Weiß", json:{protocol:"openspool",version:"1.0",brand:"Generic",type:"PLA+",color_hex:"#FFFFFF",min_temp:190,max_temp:220,bed_min_temp:50,bed_max_temp:60}},
+  { name:"PLA+ Schwarz", json:{protocol:"openspool",version:"1.0",brand:"Generic",type:"PLA+",color_hex:"#000000",min_temp:190,max_temp:220,bed_min_temp:50,bed_max_temp:60}},
+  { name:"Ender PLA Weiß", json:{protocol:"openspool",version:"1.0",brand:"Creality",type:"PLA",color_hex:"#FFFFFF",min_temp:190,max_temp:230,bed_min_temp:50,bed_max_temp:50}},
+  { name:"Geeetech PLA Rot", json:{protocol:"openspool",version:"1.0",brand:"Geeetech",type:"PLA",color_hex:"#FF0000",min_temp:185,max_temp:215,bed_min_temp:25,bed_max_temp:60}},
+  { name:"3DKaige PLA+ Grün", json:{protocol:"openspool",version:"1.0",brand:"3DKaige",type:"PLA+",color_hex:"#00983A",min_temp:210,max_temp:230,bed_min_temp:45,bed_max_temp:60}},
+  { name:"eSun PLA Basic Grau", json:{protocol:"openspool",version:"1.0",brand:"eSun",type:"PLA",color_hex:"#808080",min_temp:210,max_temp:230,bed_min_temp:45,bed_max_temp:60}},
+  { name:"eSun PLA+ Hellbraun", json:{protocol:"openspool",version:"1.0",brand:"eSun",type:"PLA+",color_hex:"#A27557",min_temp:205,max_temp:225,bed_min_temp:60,bed_max_temp:80}},
+  { name:"Timorry PETG Weiß", json:{protocol:"openspool",version:"1.0",brand:"Timorry",type:"PETG",color_hex:"#FFFFFF",min_temp:240,max_temp:270,bed_min_temp:65,bed_max_temp:75}},
+  { name:"PETG Gelb A12089", json:{protocol:"openspool",version:"1.0",brand:"Generic",type:"PETG",color_hex:"#FFFF00",min_temp:230,max_temp:250,bed_min_temp:70,bed_max_temp:85}},
+  { name:"Jlob PETG Schwarz", json:{protocol:"openspool",version:"1.0",brand:"Jlob",type:"PETG",color_hex:"#000000",min_temp:190,max_temp:230,bed_min_temp:70,bed_max_temp:85}},
+  { name:"Amazon Basics PETG Blau", json:{protocol:"openspool",version:"1.0",brand:"Amazon Basics",type:"PETG",color_hex:"#0443BA",min_temp:230,max_temp:240,bed_min_temp:80,bed_max_temp:80}},
+  { name:"Amazon Basics PETG Orange", json:{protocol:"openspool",version:"1.0",brand:"Amazon Basics",type:"PETG",color_hex:"#E97435",min_temp:230,max_temp:240,bed_min_temp:80,bed_max_temp:80}},
+  { name:"Rankforce PP", json:{protocol:"openspool",version:"1.0",brand:"Rankforce",type:"PP",color_hex:"#FFFFFF",min_temp:230,max_temp:250,bed_min_temp:90,bed_max_temp:110}},
+  { name:"Creality Hyper PC", json:{protocol:"openspool",version:"1.0",brand:"Creality",type:"PC",color_hex:"#CCCCCC",min_temp:240,max_temp:260,bed_min_temp:50,bed_max_temp:80}},
+  { name:"TPU 58 Shore Blau", json:{protocol:"openspool",version:"1.0",brand:"Generic",type:"TPU",color_hex:"#004A9F",min_temp:230,max_temp:260,bed_min_temp:50,bed_max_temp:60}},
+  { name:"TPU 58 Shore Transparent", json:{protocol:"openspool",version:"1.0",brand:"Generic",type:"TPU",color_hex:"#FFFFFF",min_temp:230,max_temp:260,bed_min_temp:50,bed_max_temp:60}},
+  { name:"eSun PLA Basic Orange", json:{protocol:"openspool",version:"1.0",brand:"eSun",type:"PLA",color_hex:"#FF8C00",min_temp:210,max_temp:230,bed_min_temp:45,bed_max_temp:60}}
 ];
 
 let side = "Vorderseite";
@@ -138,36 +135,45 @@ function resetState() {
 
 updatePreview();
 
+/* ===========================
+   WEBNFC SCHREIBEN (aktuell)
+   =========================== */
 async function writeTag() {
-  if (!("NDEFWriter" in window)) {
-    alert("WebNFC nicht verfügbar – GitHub Pages + Chrome nötig");
+  if (!("NDEFReader" in window)) {
+    alert("❌ WebNFC wird von diesem Browser nicht unterstützt");
     return;
   }
 
-  const writer = new NDEFWriter();
+  const total = parseInt(document.getElementById("rollCount").value, 10);
   const filament = filaments[select.value];
-  const total = parseInt(document.getElementById("rollCount").value);
 
-  await writer.write({
-    records: [{
-      recordType: "mime",
-      mediaType: "application/json",
-      data: JSON.stringify(filament.json)
-    }]
-  });
+  try {
+    // ✅ Aktuelle Spec: Schreiben über NDEFReader
+    const ndef = new NDEFReader();
+    await ndef.write({
+      records: [{
+        recordType: "mime",
+        mediaType: "application/json",
+        data: JSON.stringify(filament.json)
+      }]
+    });
 
-  status.textContent =
-    `✅ ${filament.name} – Rolle ${rollIndex}/${total} – ${side} geschrieben`;
+    status.textContent =
+      `✅ ${filament.name} – Rolle ${rollIndex}/${total} – ${side} geschrieben`;
 
-  if (side === "Vorderseite") {
-    side = "Rückseite";
-  } else {
-    side = "Vorderseite";
-    rollIndex++;
-    if (rollIndex > total) {
-      status.textContent = `🎉 Alle Rollen von ${filament.name} fertig programmiert`;
-      rollIndex = 1;
+    if (side === "Vorderseite") {
+      side = "Rückseite";
+    } else {
+      side = "Vorderseite";
+      rollIndex++;
+      if (rollIndex > total) {
+        status.textContent =
+          `🎉 Alle Rollen von ${filament.name} fertig programmiert`;
+        rollIndex = 1;
+      }
     }
+  } catch (err) {
+    alert("❌ Fehler beim Schreiben: " + err);
   }
 }
 </script>
