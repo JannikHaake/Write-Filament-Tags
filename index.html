@@ -148,13 +148,15 @@ async function writeTag() {
   const filament = filaments[select.value];
 
   try {
-    // ✅ Aktuelle Spec: Schreiben über NDEFReader
+    const encoder = new TextEncoder();
+    const payload = encoder.encode(JSON.stringify(filament.json));
+
     const ndef = new NDEFReader();
     await ndef.write({
       records: [{
         recordType: "mime",
         mediaType: "application/json",
-        data: JSON.stringify(filament.json)
+        data: payload
       }]
     });
 
@@ -176,6 +178,7 @@ async function writeTag() {
     alert("❌ Fehler beim Schreiben: " + err);
   }
 }
+
 </script>
 
 </body>
