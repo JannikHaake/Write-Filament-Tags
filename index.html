@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Snapmaker RFID Tag Writer (WebNFC)</title>
+  <title>Snapmaker RFID Tag Writer</title>
 
-  <!-- NFC explizit erlauben -->
+  <!-- WebNFC explizit erlauben -->
   <meta http-equiv="Permissions-Policy" content="nfc=(self)">
 
   <style>
@@ -59,6 +59,18 @@
       background: #020617;
       border-radius: 8px;
     }
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 0.5rem;
+    }
+    .color-preview {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1px solid #555;
+    }
   </style>
 </head>
 
@@ -70,6 +82,14 @@
 
   <label for="filamentSelect">Filament auswählen</label>
   <select id="filamentSelect"></select>
+
+  <label for="colorPicker">Farbe anpassen</label>
+  <input type="color" id="colorPicker">
+
+  <div class="color-row">
+    <div id="colorPreview" class="color-preview"></div>
+    <code id="colorHexPreview"></code>
+  </div>
 
   <label for="rollCount">Wie viele Rollen dieses Filaments?</label>
   <input type="number" id="rollCount" min="1" value="1" />
@@ -83,7 +103,7 @@
 
 <script>
 /* ===========================
-   FILAMENTE (18 Rollen)
+   FILAMENT-VORLAGEN
    =========================== */
 const filaments = [
   { name:"Geeetech PLA Weiß", json:{protocol:"openspool",version:"1.0",brand:"Geeetech",type:"PLA",color_hex:"#FFFFFF",min_temp:185,max_temp:215,bed_min_temp:25,bed_max_temp:60}},
@@ -106,12 +126,20 @@ const filaments = [
   { name:"eSun PLA Basic Orange", json:{protocol:"openspool",version:"1.0",brand:"eSun",type:"PLA",color_hex:"#FF8C00",min_temp:210,max_temp:230,bed_min_temp:45,bed_max_temp:60}}
 ];
 
+/* ===========================
+   STATE
+   =========================== */
+let activeFilament = null;
 let side = "Vorderseite";
 let rollIndex = 1;
 
+/* ===========================
+   UI INIT
+   =========================== */
 const select = document.getElementById("filamentSelect");
-const status = document.getElementById("status");
+const colorPicker = document.getElementById("colorPicker");
 const preview = document.getElementById("jsonPreview");
+const status = document.getElementById("status");
 
 filaments.forEach((f, i) => {
   const o = document.createElement("option");
@@ -120,23 +148,41 @@ filaments.forEach((f, i) => {
   select.appendChild(o);
 });
 
-function updatePreview() {
-  preview.textContent = JSON.stringify(filaments[select.value].json, null, 2);
+function loadSelectedFilament() {
+  const original = filaments[select.value];
+  activeFilament = JSON.parse(JSON.stringify(original.json));
+  colorPicker.value = activeFilament.color_hex;
+  updateColorUI();
+  updateJsonPreview();
 }
 
-select.onchange = resetState;
-document.getElementById("rollCount").onchange = resetState;
+function updateColorUI() {
+  document.getElementById("colorPreview").style.background =
+    activeFilament.color_hex;
+  document.getElementById("colorHexPreview").textContent =
+    activeFilament.color_hex;
+}
 
-function resetState() {
+function updateJsonPreview() {
+  preview.textContent = JSON.stringify(activeFilament, null, 2);
+}
+
+select.onchange = () => {
   side = "Vorderseite";
   rollIndex = 1;
-  updatePreview();
-}
+  loadSelectedFilament();
+};
 
-updatePreview();
+colorPicker.addEventListener("input", () => {
+  activeFilament.color_hex = colorPicker.value.toUpperCase();
+  updateColorUI();
+  updateJsonPreview();
+});
+
+loadSelectedFilament();
 
 /* ===========================
-   WEBNFC SCHREIBEN (aktuell)
+   WEBNFC WRITE
    =========================== */
 async function writeTag() {
   if (!("NDEFReader" in window)) {
@@ -145,11 +191,10 @@ async function writeTag() {
   }
 
   const total = parseInt(document.getElementById("rollCount").value, 10);
-  const filament = filaments[select.value];
 
   try {
     const encoder = new TextEncoder();
-    const payload = encoder.encode(JSON.stringify(filament.json));
+    const payload = encoder.encode(JSON.stringify(activeFilament));
 
     const ndef = new NDEFReader();
     await ndef.write({
@@ -161,7 +206,7 @@ async function writeTag() {
     });
 
     status.textContent =
-      `✅ ${filament.name} – Rolle ${rollIndex}/${total} – ${side} geschrieben`;
+      `✅ ${filaments[select.value].name} – Rolle ${rollIndex}/${total} – ${side} geschrieben`;
 
     if (side === "Vorderseite") {
       side = "Rückseite";
@@ -170,7 +215,7 @@ async function writeTag() {
       rollIndex++;
       if (rollIndex > total) {
         status.textContent =
-          `🎉 Alle Rollen von ${filament.name} fertig programmiert`;
+          `🎉 Alle Rollen von ${filaments[select.value].name} fertig programmiert`;
         rollIndex = 1;
       }
     }
@@ -178,7 +223,6 @@ async function writeTag() {
     alert("❌ Fehler beim Schreiben: " + err);
   }
 }
-
 </script>
 
 </body>
